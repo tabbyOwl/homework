@@ -7,7 +7,7 @@
 
 import Foundation
 
-//MARK: enum Action
+//MARK: энум
 
 enum Action {
     
@@ -17,45 +17,27 @@ enum Action {
     case stopEngine
     case closeWindows
     case openWindows
-    case checkHeight(allowedHeight: Double)
-    
-    }
+}
 
-// MARK: parrent class Car
+// MARK: протокол
 
-class Car {
+protocol CarImpl {
     
-    var garage : Garage?
+    var name: String { get }
+    var year: Int { get }
+    var trunkCapacity: Int { get }
+    var trunkVolume: Int { get set }
+    var isEngineOn: Bool { get set }
+    var isWindowsOpened: Bool { get set }
     
-    let name: String
-    let year: Int
-    let trunkCapacity: Int
-    var trunkVolume: Int = 0
-    var isEngineOn: Bool = false
-    var isWindowsOpened: Bool = false
+    func action ()
+}
+
+//MARK: Расширение для протокола
+
+extension CarImpl {
     
-    init(name: String,
-         year: Int,
-         trunkCapacity: Int)
-    {
-        self.name = name
-        self.year = year
-        self.trunkCapacity = trunkCapacity
-    }
-    
-    deinit {
-        print("\(name) удален из памяти")
-    }
-    func printCharacteristics() {
-        print("""
-            Марка:\(name)
-            Год выпуска: \(year)
-            Вместительность багажника: \(trunkCapacity) кг
-            """
-            )
-    }
-    
-    func action(action: Action) {
+    mutating func action (action: Action) {
         
         switch action {
             
@@ -86,152 +68,115 @@ class Car {
         case .openWindows:
             isWindowsOpened = true
             print("Окна открываются")
-            
-        case .checkHeight:
-            print("Нет ограничений по высоте")
-            
         }
-        
     }
-    
 }
 
-//MARK: sportCar
 
-final class SportCar: Car {
+//MARK: class sportCar
+
+class SportCar: CarImpl {
     
+    let name: String
+    let year: Int
+    let trunkCapacity: Int
+    var trunkVolume: Int = 0
+    var isEngineOn: Bool = false
+    var isWindowsOpened: Bool = false
     let nameForGames: String
     
-    init(name: String, year: Int, trunkCapacity: Int, nameForGames: String) {
+    init(name: String,
+         year: Int,
+         trunkCapacity: Int,
+         nameForGames: String)
+    {
+        self.name = name
+        self.year = year
+        self.trunkCapacity = trunkCapacity
         self.nameForGames = nameForGames
-        super.init(name: name, year: year, trunkCapacity: trunkCapacity)
     }
     
-    override func action(action: Action) {
-        super.action(action: action)
-    }
+    func action() {}
     
-    override func printCharacteristics() {
-        super.printCharacteristics()
-        print("Имя для соревнования: \(nameForGames)")
+    func checkHeight() {}
+}
+
+// MARK: Расширение для класса SportCar
+
+extension SportCar: CustomStringConvertible {
+    
+    var description: String {
+        return  """
+        \n
+        тип: Спорткар
+        марка: \(name)
+        год выпуска: \(year)
+        имя в соревнованиях: \(nameForGames)
+        """
     }
 }
 
+//MARK: class TruckCar
 
-//MARK: truckCar
-
-final class TruckCar : Car {
-    
+class TruckCar: CarImpl {
+   
+    let name: String
+    let year: Int
+    let trunkCapacity: Int
+    var trunkVolume: Int = 0
+    var isEngineOn: Bool = false
+    var isWindowsOpened: Bool = false
     let height: Double
     
     init(name: String,
-                  year: Int,
-                  trunkCapacity: Int,
-                  height: Double)
+         year: Int,
+         trunkCapacity: Int,
+         height: Double)
     {
+        self.name = name
+        self.year = year
+        self.trunkCapacity = trunkCapacity
         self.height = height
-        super.init(name: name,
-                   year: year,
-                   trunkCapacity: trunkCapacity)
     }
     
-    override func printCharacteristics() {
-        super.printCharacteristics()
-        print("Высота  кузова: \(height)")
-    }
+    func action() {}
     
-    override func action(action: Action) {
-        switch action {
-            //изменила багажник на кузов
-        case .loadTrunk(let kg) where (kg + trunkVolume) > trunkCapacity:
-            print("Недостаточно места в кузове грузовика.")
-            
-        case .loadTrunk(let kg):
-            trunkVolume = kg + trunkVolume
-            print("Загрузка \(kg) килограмм")
-            
-        case .unloadTrunk(let kg) where kg > trunkVolume:
-            print("Невозможно выгрузить  \(kg) кг.")
-        case .unloadTrunk(let kg):
-            trunkVolume = trunkVolume - kg
-            print("Выгрузка \(kg) кг")
-            
-        case .startEngine:
-            isEngineOn = true
-            print("Идет запуск двигателя")
-            
-        case .stopEngine:
-            isEngineOn = false
-            print("Идет глушение двигателя")
-            
-        case .closeWindows:
-            isWindowsOpened = false
-            print("Окна закрываются")
-            
-        case .openWindows:
-            isWindowsOpened = true
-            print("Окна открываются")
-            
-        case .checkHeight(let allowedHeight):
-            if allowedHeight <= height {
-               print("Проезд разрешен")
-            } else {
-                print("Проезд запрещен")
-            }
+    func checkHeight(allowedHeight: Double) {
+        if height < allowedHeight {
+            print("Проезд разрешен")
+        } else {
+            print("Проезд запрещен")
         }
     }
 }
+// MARK: Расширение для класса TruckCar
 
-final class Garage {
+extension TruckCar: CustomStringConvertible {
     
-    var boxNumber: Int
-    weak var car: Car?
-    
-    init(boxNumber: Int) {
-        self.boxNumber = boxNumber
+    var description: String {
+        return  """
+    \n
+    тип: Грузовой
+    марка: \(name)
+    год выпуска: \(year)
+    вместительность: \(trunkCapacity) кг
+    """
     }
-    
-    deinit {
-        print("Бокс номер \(boxNumber) удален")
-    }
-    
 }
 
-//MARK: actions
+var sportCar = SportCar(name: "Lamborgini",
+                        year: 2018,
+                        trunkCapacity: 50,
+                        nameForGames: "Arrow")
 
 var truck = TruckCar(name: "Mercedes",
-                     year: 2015,
-                     trunkCapacity: 7000,
-                     height: 1.8)
+                     year: 2020,
+                     trunkCapacity: 9000,
+                     height: 1.9)
 
-var sportCar = SportCar(name: "Aston Martin",
-                        year: 2009,
-                        trunkCapacity: 50,
-                        nameForGames: "Nightmare")
+sportCar.action(action: .startEngine)
+sportCar.action(action: .loadTrunk(kg: 80))
+truck.action(action: .loadTrunk(kg: 8000))
+truck.checkHeight(allowedHeight: 2)
 
-
-truck.action(action: .loadTrunk(kg: 9000))
-
-sportCar.action(action: .loadTrunk(kg: 90))
-
-truck.action(action: .checkHeight(allowedHeight: 2))
-
-truck.printCharacteristics()
-
-sportCar.printCharacteristics()
-
-// ARC проверка deinit
-
-var garage: Garage?
-
-var car: Car?
-
-garage = Garage(boxNumber: 2)
-car = Car(name: "audi", year: 2018, trunkCapacity: 40)
-
-garage?.car = car
-car?.garage = garage
-
-car = nil
-
-
+print(sportCar, truck)
