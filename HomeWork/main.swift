@@ -10,8 +10,9 @@ import Foundation
 //MARK: Error
 
 enum CofeeMachineError: Error {
-
-    case invalidSelection
+    
+    case insufficientCapasity
+    case lackOfIngredients
     case insufficientFunds(coinsNeeded: Int)
 }
 
@@ -33,37 +34,28 @@ enum Cofee {
     
 }
 
-//MARK: containers
-
-struct CofeeContainer {
+struct Container {
     
-    var weight: Int
-    
+    var ingredient: Ingredients
+    var volume: Int
+    var capasity: Int
 }
 
-struct MilkContainer {
-    
-    var volume: Int
-}
-
-struct CreamContainer {
-    
-    var volume: Int
-}
-
-struct WaterContainer {
-    
-    var volume: Int
+enum Ingredients {
+    case cofee
+    case milk
+    case cream
+    case water
 }
 
 //MARK: CofeeMashine
 
 final class CofeeMashine {
     
-    private var cofeeContainer = CofeeContainer(weight: 15)
-    private var milkContainer = MilkContainer(volume: 120)
-    private var creamContainer = CreamContainer(volume:120)
-    private var waterContainer = WaterContainer(volume: 120)
+    private var cofeeContainer = Container(ingredient: .cofee, volume: 0, capasity: 100)
+    private var milkContainer = Container(ingredient: .milk, volume: 0, capasity: 1000)
+    private var creamContainer = Container(ingredient: .cream, volume: 0, capasity: 1000)
+    private var waterContainer = Container(ingredient: .water, volume: 0, capasity: 1000)
     
     var coinsDeposite: Int = 0
 
@@ -72,6 +64,7 @@ final class CofeeMashine {
                 .Capuchino: Product(cofee: .Capuchino, price: 80),
                 .Machiato: Product(cofee: .Machiato, price: 75)]
     
+    // по заданию: возвращать либо значение, либо ошибку Error
     func orderCofee(cofee: Cofee) -> (Cofee?, CofeeMachineError?) {
         
         guard coinsDeposite >= menu[cofee]!.price else {
@@ -81,9 +74,9 @@ final class CofeeMashine {
         
         do {
             try makeCofee(cofee: cofee)
-        } catch CofeeMachineError.invalidSelection {
+        } catch CofeeMachineError.lackOfIngredients {
             print("Не хватает ингридиентов. Необходимо заполнить контейнеры")
-            return (nil, CofeeMachineError.invalidSelection)
+            return (nil, CofeeMachineError.lackOfIngredients)
         } catch let error {
             print(error.localizedDescription)
         }
@@ -96,43 +89,73 @@ final class CofeeMashine {
         switch cofee {
             
         case .Esspresso:
-            guard cofeeContainer.weight >= 7 && waterContainer.volume >= 60 else {
-                throw CofeeMachineError.invalidSelection
+            guard cofeeContainer.volume >= 7 && waterContainer.volume >= 60 else {
+                throw CofeeMachineError.lackOfIngredients
             }
-            cofeeContainer.weight -= 7
+            cofeeContainer.volume -= 7
             waterContainer.volume -= 60
             
         case .Machiato:
-            guard cofeeContainer.weight >= 7 && waterContainer.volume >= 60 && creamContainer.volume >= 60 else {
-                throw CofeeMachineError.invalidSelection
+            guard cofeeContainer.volume >= 7 && waterContainer.volume >= 60 && creamContainer.volume >= 60 else {
+                throw CofeeMachineError.lackOfIngredients
             }
-            cofeeContainer.weight -= 7
+            cofeeContainer.volume -= 7
             waterContainer.volume -= 60
             creamContainer.volume -= 60
             
         case .Latte:
-            guard cofeeContainer.weight >= 7 && waterContainer.volume >= 60 && milkContainer.volume >= 90 else {
-                throw CofeeMachineError.invalidSelection
+            guard cofeeContainer.volume >= 7 && waterContainer.volume >= 60 && milkContainer.volume >= 90 else {
+                throw CofeeMachineError.lackOfIngredients
             }
-            cofeeContainer.weight -= 7
+            cofeeContainer.volume -= 7
             waterContainer.volume -= 60
             milkContainer.volume -= 90
             
         case .Capuchino:
-            guard cofeeContainer.weight >= 7 && waterContainer.volume >= 60 && creamContainer.volume >= 60 && milkContainer.volume >= 90 else {
-                throw CofeeMachineError.invalidSelection
+            guard cofeeContainer.volume >= 7 && waterContainer.volume >= 60 && creamContainer.volume >= 60 && milkContainer.volume >= 90 else {
+                throw CofeeMachineError.lackOfIngredients
             }
-            cofeeContainer.weight -= 7
+            cofeeContainer.volume -= 7
             waterContainer.volume -= 60
             creamContainer.volume -= 60
             milkContainer.volume -= 60
         }
     }
+    
+    func fill(ingredient: Ingredients, volume: Int) {
+        do {
+            try fillIngredients(ingredient: ingredient, volume: volume)
+        } catch CofeeMachineError.insufficientCapasity {
+            print("Недостаточно места")
+        } catch let error {
+            print(error.localizedDescription)
+        }
+    }
+    
+    private func fillIngredients(ingredient: Ingredients, volume: Int) throws {
+        switch ingredient {
+        case .cofee:
+            guard cofeeContainer.capasity >= cofeeContainer.volume + volume else {
+                throw CofeeMachineError.insufficientCapasity
+            }
+            cofeeContainer.volume += volume
+        case .milk:
+            guard milkContainer.capasity >= milkContainer.volume + volume else {
+                throw CofeeMachineError.insufficientCapasity
+            }
+            milkContainer.volume += volume
+        case .cream:
+            guard creamContainer.capasity >= creamContainer.volume + volume else {
+                throw CofeeMachineError.insufficientCapasity
+            }
+            creamContainer.volume += volume
+        case .water:
+            guard waterContainer.capasity >= waterContainer.volume + volume else {
+                    throw CofeeMachineError.insufficientCapasity
+            }
+            waterContainer.volume += volume
+        }
+    }
+    
 }
-
-
-var cofee = CofeeMashine()
-cofee.coinsDeposite = 80
-cofee.orderCofee(cofee: .Capuchino)
-cofee.orderCofee(cofee: .Esspresso)
 
