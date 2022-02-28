@@ -58,12 +58,12 @@ struct WaterContainer {
 
 //MARK: CofeeMashine
 
-class CofeeMashine {
+final class CofeeMashine {
     
-    var cofeeContainer = CofeeContainer(weight: 15)
-    var milkContainer = MilkContainer(volume: 120)
-    var creamContainer = CreamContainer(volume:120)
-    var waterContainer = WaterContainer(volume: 120)
+    private var cofeeContainer = CofeeContainer(weight: 15)
+    private var milkContainer = MilkContainer(volume: 120)
+    private var creamContainer = CreamContainer(volume:120)
+    private var waterContainer = WaterContainer(volume: 120)
     
     var coinsDeposite: Int = 0
 
@@ -91,7 +91,7 @@ class CofeeMashine {
         return (cofee, nil)
     }
     
-    private func makeCofee(cofee: Cofee) throws -> Cofee? {
+    private func makeCofee(cofee: Cofee) throws {
         
         switch cofee {
             
@@ -127,7 +127,6 @@ class CofeeMashine {
             creamContainer.volume -= 60
             milkContainer.volume -= 60
         }
-        return cofee
     }
 }
 
